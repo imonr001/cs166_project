@@ -518,7 +518,7 @@ public class Retail {
    public static void viewRecentOrders(Retail esql) {
 	System.out.println("In viewRecentOrders");
 	
-	String query = String.format("SELECT O.unitsOrdered, O.orderTime, O.storeID, O.productName FROM Users U, Orders O WHERE U.userID = %s AND O.customerID = %s", Retail.getUserID(), Retail.getUserID());
+	String query = String.format("SELECT S.storeID, S.name, O.productName, O.unitsOrdered, O.orderTime FROM Users U, Orders O, Store S WHERE U.userID = %s AND O.customerID = %s AND S.storeID = O.storeID", Retail.getUserID(), Retail.getUserID());
 	try {
 		esql.executeQueryAndPrintResult(query);
 	}
