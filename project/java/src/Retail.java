@@ -517,9 +517,11 @@ public class Retail {
 
    public static void viewRecentOrders(Retail esql) {
 	System.out.println("In viewRecentOrders");
-	
+	String checkIfMGR = String.format("SELECT U.userID FROM Users U WHERE U.userID = %s AND type = 'manager'", Retail.getUserID());
 	String query = String.format("SELECT S.storeID, S.name, O.productName, O.unitsOrdered, O.orderTime FROM Users U, Orders O, Store S WHERE U.userID = %s AND O.customerID = %s AND S.storeID = O.storeID", Retail.getUserID(), Retail.getUserID());
 	try {
+		int check = esql.executeQuery(checkIfMGR);
+		System.out.println(check);
 		esql.executeQueryAndPrintResult(query);
 	}
 	catch (Exception e) {
