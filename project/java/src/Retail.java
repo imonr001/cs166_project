@@ -517,7 +517,7 @@ public class Retail {
    }
 
    public static void viewRecentOrders(Retail esql) {
-	String query = String.format("SELECT S.storeID, S.name, O.productName, O.unitsOrdered, O.orderTime FROM Users U, Orders O, Store S WHERE U.userID = %s AND O.customerID = %s AND S.storeID = O.storeID ORDER BY O.orderTime::timestamp DESC", Retail.getUserID(), Retail.getUserID());
+	String query = String.format("SELECT S.storeID, S.name, O.productName, O.unitsOrdered, O.orderTime FROM Users U, Orders O, Store S WHERE U.userID = %s AND O.customerID = %s AND S.storeID = O.storeID ORDER BY O.orderTime::timestamp DESC limit 5", Retail.getUserID(), Retail.getUserID());
 	try {
 		esql.executeQueryAndPrintResult(query);
 	}
@@ -538,7 +538,16 @@ public class Retail {
    }
    public static void updateProduct(Retail esql) {}
    public static void viewRecentUpdates(Retail esql) {}
-   public static void viewPopularProducts(Retail esql) {}
+   public static void viewPopularProducts(Retail esql) {
+  	String query = String.format("SELECT O.productName, SUM(O.unitsOrdered) FROM Orders O, Store S WHERE S.managerID = %s AND S.storeID = O.storeID GROUP BY O.productName ORDER BY SUM(O.unitsOrdered) DESC limit 5", Retail.getUserID());
+	
+	try {
+		esql.executeQueryAndPrintResult(query);
+	}
+	catch(Exception e) {
+		System.err.println(e.getMessage());
+	}
+   }
    public static void viewPopularCustomers(Retail esql) {}
    public static void placeProductSupplyRequests(Retail esql) {}
 
