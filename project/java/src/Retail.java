@@ -311,13 +311,12 @@ public class Retail {
                  System.out.println("4. View 5 recent orders");
  
                  //the following functionalities basically used by managers
-                 System.out.println("10. View managed stores and products");
                  System.out.println("5. Update Product");
                  System.out.println("6. View 5 recent Product Updates Info");
                  System.out.println("7. View 5 Popular Items");
                  System.out.println("8. View 5 Popular Customers");
                  System.out.println("9. Place Product Supply Request to Warehouse");
- 
+		 System.out.println("10. View managed stores and products");
                  System.out.println("0. Test");
  
                  System.out.println(".........................");
@@ -529,6 +528,13 @@ public class Retail {
    }
    
    public static void viewManagerStoresAndOrders(Retail esql) {
+	String query = String.format("SELECT O.orderNumber, O.customerID, O.storeID, O.productName, O.orderTime FROM Store S, Orders O WHERE S.managerID = %s AND S.storeID = O.storeID  ORDER BY O.orderTime::timestamp DESC", Retail.getUserID());
+	try {
+		esql.executeQueryAndPrintResult(query);
+	}
+	catch (Exception e) {
+		System.err.println(e.getMessage());
+	}	
    }
    public static void updateProduct(Retail esql) {}
    public static void viewRecentUpdates(Retail esql) {}
