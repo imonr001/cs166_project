@@ -311,6 +311,7 @@ public class Retail {
                  System.out.println("4. View 5 recent orders");
  
                  //the following functionalities basically used by managers
+                 System.out.println("10. View managed stores and products");
                  System.out.println("5. Update Product");
                  System.out.println("6. View 5 recent Product Updates Info");
                  System.out.println("7. View 5 Popular Items");
@@ -331,6 +332,7 @@ public class Retail {
                     case 7: viewPopularProducts(esql); break;
                     case 8: viewPopularCustomers(esql); break;
                     case 9: placeProductSupplyRequests(esql); break;
+	   	    case 10: viewManagerStoresAndOrders(esql); break;
                     case 20: usermenu = false; break;
                     default : System.out.println("Unrecognized choice!"); break;
                  }
@@ -516,18 +518,17 @@ public class Retail {
    }
 
    public static void viewRecentOrders(Retail esql) {
-	System.out.println("In viewRecentOrders");
-	String checkIfMGR = String.format("SELECT U.userID FROM Users U WHERE U.userID = %s AND type = 'manager'", Retail.getUserID());
-	String query = String.format("SELECT S.storeID, S.name, O.productName, O.unitsOrdered, O.orderTime FROM Users U, Orders O, Store S WHERE U.userID = %s AND O.customerID = %s AND S.storeID = O.storeID", Retail.getUserID(), Retail.getUserID());
+	String query = String.format("SELECT S.storeID, S.name, O.productName, O.unitsOrdered, O.orderTime FROM Users U, Orders O, Store S WHERE U.userID = %s AND O.customerID = %s AND S.storeID = O.storeID ORDER BY O.orderTime::timestamp DESC", Retail.getUserID(), Retail.getUserID());
 	try {
-		int check = esql.executeQuery(checkIfMGR);
-		System.out.println(check);
 		esql.executeQueryAndPrintResult(query);
 	}
 	catch (Exception e) {
 		System.err.println(e.getMessage());
 	}
 			   
+   }
+   
+   public static void viewManagerStoresAndOrders(Retail esql) {
    }
    public static void updateProduct(Retail esql) {}
    public static void viewRecentUpdates(Retail esql) {}
