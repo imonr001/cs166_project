@@ -549,7 +549,8 @@ public class Retail {
 	}
    }
    public static void viewPopularCustomers(Retail esql) {
-  	String query = String.format("SELECT U.name, COUNT(O.orderNumber) FROM Orders O, Users U, Store S WHERE S.managerID = %s AND O.storeID = S.storeID AND O.customerID = U.userID GROUP BY U.name ORDER BY COUNT(O.orderNumber) DESC limit 5", Retail.getUserID());
+  	String query = String.format("SELECT U.name, COUNT(O.orderNumber) FROM Orders O, Users U WHERE O.customerID = U.userID GROUP BY U.name");
+	
 	try {
 	esql.executeQueryAndPrintResult(query);
 	}
