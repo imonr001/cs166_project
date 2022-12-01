@@ -29,6 +29,7 @@ import javax.management.StringValueExp;
 
 import java.util.ArrayList;
 import java.lang.Math;
+import java.nio.Buffer;
 
 /**
  * This class defines a simple embedded SQL utility class that is designed to
@@ -305,32 +306,32 @@ public class Retail {
                while(usermenu) {
                  System.out.println("MAIN MENU");
                  System.out.println("---------");
-                 System.out.println("1. View Stores within 30 miles");
-                 System.out.println("2. View Product List");
-                 System.out.println("3. Place a Order");
-                 System.out.println("4. View 5 recent orders");
+               //   System.out.println("1. View Stores within 30 miles");
+               //   System.out.println("2. View Product List");
+               //   System.out.println("3. Place a Order");
+               //   System.out.println("4. View 5 recent orders");
  
                  //the following functionalities basically used by managers
-                 System.out.println("5. Update Product");
-                 System.out.println("6. View 5 recent Product Updates Info");
-                 System.out.println("7. View 5 Popular Items");
-                 System.out.println("8. View 5 Popular Customers");
-                 System.out.println("9. Place Product Supply Request to Warehouse");
- 
-                 System.out.println("0. Test");
- 
+                 System.out.println("1. Update Product");
+                 System.out.println("2. View 5 recent Product Updates Info");
+                 System.out.println("3. View 5 Popular Items");
+                 System.out.println("4. View 5 Popular Customers");
+                 System.out.println("5. Place Product Supply Request to Warehouse");
+                 System.out.println("6. View managed stores and products"); 
+                 
                  System.out.println(".........................");
                  System.out.println("20. Log out");
                  switch (readChoice()){
-                    case 1: viewStores(esql); break;
-                    case 2: viewProducts(esql); break;
-                    case 3: placeOrder(esql); break;
-                    case 4: viewRecentOrders(esql); break;
-                    case 5: updateProduct(esql); break;
-                    case 6: viewRecentUpdates(esql); break;
-                    case 7: viewPopularProducts(esql); break;
-                    case 8: viewPopularCustomers(esql); break;
-                    case 9: placeProductSupplyRequests(esql); break;
+                  //   case 1: viewStores(esql); break;
+                  //   case 2: viewProducts(esql); break;
+                  //   case 3: placeOrder(esql); break;
+                  //   case 4: viewRecentOrders(esql); break;
+                    case 1: updateProduct(esql); break;
+                    case 2: viewRecentUpdates(esql); break;
+                    case 3: viewPopularProducts(esql); break;
+                    case 4: viewPopularCustomers(esql); break;
+                    case 5: placeProductSupplyRequests(esql); break;
+                    case 6: viewManagerStoresAndOrders(esql); break;
                     case 20: usermenu = false; break;
                     default : System.out.println("Unrecognized choice!"); break;
                  }
@@ -446,7 +447,6 @@ public class Retail {
          List<List<String>> id = esql.executeQueryAndReturnResult(queryMgrID);
          setUser(name, id.get(0));
 
-
 	 if (userNum > 0)
 		return name;
          return null;
@@ -459,9 +459,7 @@ public class Retail {
 // Rest of the functions definition go in here
 
    public static void viewStores(Retail esql) {
-      try{
-         
-         
+      try{   
          String query = String.format("select s.storeID, s.name, calculate_distance(u.latitude, u.longitude, s.latitude, s.longitude) as dist from users u, store s where u.userID = %s and calculate_distance(u.latitude, u.longitude, s.latitude, s.longitude) <= 30",Retail.getUserID());
          int rowCount = esql.executeQuery(query);
          System.out.println ("total row(s): " + rowCount);
@@ -498,38 +496,150 @@ public class Retail {
          String numberOFUnits = in.readLine();
        
          String queryUpdateProduct = String.format("UPDATE product set numberofunits = numberofunits + '%s' WHERE storeid = '%s' and productname = '%s' and product.storeid IN (select s.storeID as dist from users u, store s where u.userID = '%s' and s.storeID = '%s' and calculate_distance(u.latitude, u.longitude, s.latitude, s.longitude) <= 30); ",numberOFUnits,storeID,productName,Retail.getUserID(),storeID);
-         String queryOrderProduct = String.format("insert into orders(ordernumber,customerid,storeid,productname,unitsordered,ordertime) VALUES (DEFAULT,'%s','%s','%s','%s',current_timestamp)",Retail.getUserID(),storeID,productName,numberOFUnits);
+         String queryOrderProduct = String.format("insert into orders(ordernumber,customerid,storeid,productname,unitsordered,ordertime) VALUES (DEFAULT,'%s','%s','%s','%s',now()::timestamptz(0))",Retail.getUserID(),storeID,productName,numberOFUnits);
          String checkIfStoreInRange =String.format("select s.storeID from users u, store s where u.userID = '%s'  and s.storeid = '%s' and calculate_distance(u.latitude, u.longitude, s.latitude, s.longitude) <= 30;",Retail.getUserID(),storeID);
          
           esql.executeUpdate(queryUpdateProduct);
           int check = esql.executeQuery(checkIfStoreInRange);
          if(check > 0){
             esql.executeUpdate(queryOrderProduct);    
-            System.out.print("Order has been placed\n");
+            System.out.print("\nOrder has been placed!\n");
          }
          else{
-            System.out.print("This store is not in range.\n");
+            System.out.print("\nThis store is not in range!\n");
          }
       }catch(Exception e){
          System.err.println (e.getMessage());
       }
    }
 
-   public static void viewRecentOrders(Retail esql) {}
-   public static void updateProduct(Retail esql) {}
-   public static void viewRecentUpdates(Retail esql) {}
-   public static void viewPopularProducts(Retail esql) {}
-   public static void viewPopularCustomers(Retail esql) {}
-   public static void placeProductSupplyRequests(Retail esql) {}
+   public static void viewRecentOrders(Retail esql) {
+   //    System.out.println("In viewRecentOrders");
+
+	//    String checkIfMGR = String.format("SELECT U.userID FROM Users U WHERE U.userID = %s AND type = 'manager'", Retail.getUserID());
+	//    String query = String.format("SELECT S.storeID, S.name, O.productName, O.unitsOrdered, O.orderTime FROM Users U, Orders O, Store S WHERE U.userID = %s AND O.customerID = %s AND S.storeID = O.storeID", Retail.getUserID(), Retail.getUserID());
+	//    try {
+	// 	int check = esql.executeQuery(checkIfMGR);
+	// 	System.out.println(check);
+	// 	esql.executeQueryAndPrintResult(query);
+	//    }
+	//    catch (Exception e) {
+	// 	System.err.println(e.getMessage());
+	// }
+   String query = String.format("SELECT S.storeID, S.name, O.productName, O.unitsOrdered, O.orderTime FROM Users U, Orders O, Store S WHERE U.userID = '%s' AND O.customerID = '%s' AND S.storeID = O.storeID ORDER BY O.orderTime::timestamp DESC limit 5", Retail.getUserID(), Retail.getUserID()).trim();
+	try {
+		esql.executeQueryAndPrintResult(query.trim());
+	}
+	catch (Exception e) {
+		System.err.println(e.getMessage());
+	}
+
+   }
+   public static void updateProduct(Retail esql) {
+      try {
+         System.out.print("\tEnter store ID: $");
+         String storeID = in.readLine();
+         String queryStore = String.format("select s.storeid From store s join users u on u.userid = s.managerid WHERE (s.managerid = '%s' AND u.name = '%s' AND s.storeid = '%s');",Retail.getUserID(),Retail.getName(),storeID);
+         List<List<String>> store = esql.executeQueryAndReturnResult(queryStore);
+         List<List<String>> checkList = new ArrayList<List<String>>();
+         List<String> l = new ArrayList<>();
+         l.add(storeID);
+         checkList.add(0,l);
+
+         // String updateProduct = "";
+         
+         if(store.equals(checkList)==true){
+         System.out.print("\tPlease Enter the name of the Product that you would like to update: $");
+         String productName = in.readLine();
+         System.out.print("\tPlease Enter the number of unites that you would like to update it to: $");
+         String numberOfUnits = in.readLine();
+         System.out.print("\tPlease Enter the new price per unit: $");
+         String pricePerUnit = in.readLine();
+         String updateProduct = String.format("UPDATE product set numberofunits = numberofunits + '%s', priceperunit = '%s' WHERE storeid = '%s' and productname = '%s' and product.storeid in (select s.storeID from users u, store s where u.userID = '%s'); ",numberOfUnits,pricePerUnit,storeID,productName,Retail.getUserID());
+          esql.executeUpdate(updateProduct);
+          String productUpdateInsert = String.format("insert into productupdates (updatenumber,managerid,storeid,productname,updatedon) VALUES( DEFAULT, '%s','%s','%s',now()::timestamptz(0));",Retail.getUserID(),storeID,productName);
+          esql.executeUpdate(productUpdateInsert);
+         }else{
+            System.out.println("\nStore is not mangaged by this manager!\n \nPlease make a new selection\n");
+         }
+      } catch (Exception e) {
+         System.err.println (e.getMessage());
+      } 
+   }
+   public static void viewRecentUpdates(Retail esql) {
+      try {
+         //List<List<String>> storeID = new ArrayList<List<String>>();
+         //String findCurrentStore = String.format("select s.storeid FROM store s JOIN users u on s.managerid = u.userid and u.name = '%s' order by dateestablished DESC limit 1;",Retail.getName());
+         //storeID = esql.executeQueryAndReturnResult(findCurrentStore);
+         //String viewLastFiveUpdates = String.format("select * from productupdates p where p.managerid = '%s' and p.storeid = '%s' order by updatedon DESC LIMIT 5;",Retail.getUserID(),storeID.get(0).get(0));
+         String viewLastFiveUpdates = String.format("select p.storeid,p.managerid,p.productname,p.updatenumber,p.updatedon from productupdates p where p.managerid = '%s' order by updatedon DESC LIMIT 5;",Retail.getUserID());
+         esql.executeQueryAndPrintResult(viewLastFiveUpdates);
+      } catch (Exception e) {
+         System.err.println (e.getMessage());
+      }
+    
+   }
+   public static void viewManagerStoresAndOrders(Retail esql) {
+      String query = String.format("SELECT o.*,c.name from store s join users m on m.userid = s.managerid join orders o on o.storeid = s.storeid join users c on c.userid = o.customerid and m.userid = '%s' ORDER BY O.orderTime::timestamp DESC", Retail.getUserID());
+      try {
+         System.out.println(Retail.getUserID());
+         esql.executeQueryAndPrintResult(query);
+      }
+      catch (Exception e) {
+         System.err.println(e.getMessage());
+      }	
+   }
+   public static void viewPopularProducts(Retail esql) {
+      String query = String.format("SELECT O.productName, SUM(O.unitsOrdered) as Total_amount FROM Orders O, Store S WHERE S.managerID = '%s' AND S.storeID = O.storeID GROUP BY O.productName ORDER BY SUM(O.unitsOrdered) DESC limit 5", Retail.getUserID());
+	
+	try {
+		esql.executeQueryAndPrintResult(query);
+	}
+	catch(Exception e) {
+		System.err.println(e.getMessage());
+	}
+   }
+   public static void viewPopularCustomers(Retail esql) {
+      String query = String.format("SELECT U.name, COUNT(O.orderNumber) FROM Orders O, Users U, Store S WHERE S.managerID = '%s' AND O.storeID = S.storeID AND O.customerID = U.userID GROUP BY U.name ORDER BY COUNT(O.orderNumber) DESC limit 5", Retail.getUserID());
+	try {
+	esql.executeQueryAndPrintResult(query);
+	}
+	catch(Exception e) {
+		System.err.println(e.getMessage());
+	}
+   }
+   public static void placeProductSupplyRequests(Retail esql) {
+   try {
+      System.out.print("\tEnter store ID: $");
+      String storeID = in.readLine();
+      System.out.print("\tPlease Enter the name of the Product name: $");
+      String productName = in.readLine();
+      System.out.print("\tPlease Enter the number of unites needed: $");
+      String numberOfUnitesNeeded = in.readLine();
+      System.out.print("\tPlease Enter the warehouse ID number: $");
+      String warehouseID = in.readLine();
+
+      String insertRequest = String.format("INSERT INTO productsupplyrequests (requestnumber,managerid,warehouseid,storeid,productname,unitsrequested) VALUES (DEFAULT,'%s','%s','%s','%s','%s');",Retail.getUserID(),warehouseID,storeID,productName,numberOfUnitesNeeded);
+      String productUpdate = String.format("UPDATE product set numberofunits = numberofunits + '%s' WHERE storeid = '%s' and productname = '%s' and product.storeid in (select s.storeID from users u, store s where u.userID = '%s');",numberOfUnitesNeeded,storeID,productName,Retail.getUserID());
+      esql.executeUpdate(insertRequest);
+      esql.executeUpdate(productUpdate);
+      System.out.print("\nRequest for "+productName+ " " + "was successful!\n");
+
+   } catch (Exception e) {
+      System.err.println(e.getMessage());
+
+   }
+   }
 
    public static void setUser(String name, List<String> id){
-      user_name = name;
+      user_name =  name;
       user_id = id.get(0);
-      
    }
+
    public static  String getName(){
       return user_name;
    }
+
    public static  String getUserID(){
       return user_id;
    }
