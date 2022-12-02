@@ -270,13 +270,17 @@ public class Retail {
             System.out.println("1. Create user");
             System.out.println("2. Log in Customer");
             System.out.println("3. Log in Manager");
+            System.out.println("4. Log in Admin");
             System.out.println("9. < EXIT");
             String authorisedUser = null;
             String authorisedMgr = null;
+            String authorisedAdmin = null;
+
             switch (readChoice()){
                case 1: CreateUser(esql); break;
                case 2: authorisedUser = LogIn(esql); break;
                case 3: authorisedMgr = LogInMGR(esql); break;
+               case 4: authorisedAdmin = LogInAdmin(esql); break;
                case 9: keepon = false; break;
                default : System.out.println("Unrecognized choice!"); break;
             }//end switch
@@ -337,6 +341,36 @@ public class Retail {
                  }
                }
              }
+             if (authorisedAdmin != null) {
+               boolean usermenu = true;
+               while(usermenu) {
+                 System.out.println("MAIN MENU");
+                 System.out.println("---------");
+                 System.out.println("1. View User");
+                 System.out.println("2. View All Users");
+                 System.out.println("2. View Product");
+                 System.out.println("3. View 5 Recent Updates on Products");
+                 System.out.println("4. Update User");
+                 System.out.println("5. Update Product");
+                 System.out.println("6. Delete User");
+                 System.out.println("7. Delete Product");
+                 System.out.println(".........................");
+                 System.out.println("20. Log out");
+                 switch (readChoice()){
+                    case 1: viewUser(esql); break;
+                    case 2: viewAllUsers(esql);break;
+                    case 3: viewProducts(esql); break;
+                    case 4: viewRecentUpdates(esql);
+                    case 5: updateUserAdmin(esql); break;
+                    case 6: updateProductAdmin(esql); break;
+                    case 7: deleteUser(esql); break;
+                    case 8: deleteProduct(esql); break;
+                     case 20: usermenu = false; break;
+                    default : System.out.println("Unrecognized choice!"); break;
+                 }
+               }
+             }
+             
          }//end while
       }catch(Exception e) {
          System.err.println (e.getMessage ());
@@ -455,6 +489,27 @@ public class Retail {
          return null;
       }
    }//end
+   public static String LogInAdmin(Retail esql){
+      try{
+         System.out.print("\tEnter name: ");
+         String name = in.readLine();
+         System.out.print("\tEnter password: ");
+         String password = in.readLine();
+
+         String query = String.format("SELECT * FROM USERS WHERE name = '%s' AND password = '%s'AND type = 'admin'", name, password);
+         int userNum = esql.executeQuery(query);
+         String queryAdminID = String.format("SELECT userid FROM USERS u WHERE u.name = '%s' AND u.password = '%s' AND type = 'admin'", name, password);
+         List<List<String>> id = esql.executeQueryAndReturnResult(queryAdminID);
+         setUser(name, id.get(0));
+
+	 if (userNum > 0)
+		return name;
+         return null;
+      }catch(Exception e){
+         System.err.println (e.getMessage ());
+         return null;
+      }
+   }//end
 
 // Rest of the functions definition go in here
 
@@ -479,8 +534,8 @@ public class Retail {
          }catch (NumberFormatException e) {
             System.out.println("ERROR: Input is not a number");
          }   
-         String query = String.format(" select p.* from product p join store s on s.storeid = p.storeid AND p.storeid = '%s'", storeNumber);
-         esql.executeQueryAndPrintResult(query);
+           String query = String.format(" select p.* from product p join store s on s.storeid = p.storeid AND p.storeid = '%s'", storeNumber);
+           esql.executeQueryAndPrintResult(query); 
       }catch(Exception e){
          System.err.println (e.getMessage());
       }
@@ -629,6 +684,87 @@ public class Retail {
       System.err.println(e.getMessage());
 
    }
+   }
+   public static void viewUser(Retail esql) {
+      try {
+      System.out.print("Please enter the name of the user: $");
+      String user = in.readLine();
+      String query = String.format("select s.userid,TRIM(TRAILING ' ' from s.name)as Name,s.type from users s where s.name = '%s';",user);
+      esql.executeQueryAndPrintResult(query);
+      }
+      catch (Exception e) {
+         System.err.println(e.getMessage());
+      }	
+   }
+   public static void deleteUser(Retail esql) {
+      try {
+      
+         System.out.print("Please enter the name of the user you would like to delete: $");
+         String user = in.readLine();
+         String query = String.format("DELETE FROM users u WHERE u.name = '%s' AND u.type != 'admin';",user);
+         esql.executeQueryAndPrintResult(query);
+      }
+      catch (Exception e) {
+         System.err.println(e.getMessage());
+      }	
+   }
+   public static void deleteProduct(Retail esql) {
+      try {
+         System.out.print("Please enter the name of the product you would like to delete: ");
+         String product = in.readLine();
+         System.out.print("Please enter the store ID from of the product you would like to delete: ");
+         String storeid = in.readLine();
+         String query = String.format("DELETE FROM product p WHERE p.productname = '%s' AND p.storeid = '%s';",product,storeid);
+         esql.executeQueryAndPrintResult(query);
+      }
+      catch (Exception e) {
+         System.err.println(e.getMessage());
+      }	
+   }
+   public static void updateUserAdmin(Retail esql) {
+      try {
+         System.out.print("\tPlease Enter the name of the User that you would like to update: $");
+         String userName = in.readLine();
+         System.out.print("\tPlease Enter the ID of the user that you would like to update: $");
+         String userID = in.readLine();
+         System.out.print("\tPlease Enter the new role of the user: ");
+         String typeOfUser = in.readLine();
+         System.out.print("\tPlease Enter the new password of the user: ");
+         String password = in.readLine();
+         String updateUser = String.format("UPDATE users set type = '%s', password = '%s' WHERE users IN (select u from users u where u.name = '%s' and u.userid = '%s');",typeOfUser,password,userName,userID);
+         esql.executeUpdate(updateUser);
+      }
+      catch (Exception e) {
+         System.err.println(e.getMessage());
+      }	
+   }
+   public static void viewAllUsers(Retail esql) {
+      try {
+         String viewAllUsers = String.format("select u.type,u.userid,u.name from users u ORDER by type ASC;");
+         esql.executeQueryAndPrintResult(viewAllUsers);
+      }
+      catch (Exception e) {
+         System.err.println(e.getMessage());
+      }	
+   }
+   public static void updateProductAdmin(Retail esql) {
+      try {
+         System.out.print("\tPlease Enter the name of the Product that you would like to update: $");
+         String productName = in.readLine();
+         System.out.print("\tPlease Enter the store id of the Product that you would like to update: $");
+         String storeID = in.readLine();
+         System.out.print("\tPlease Enter the number of unites that you would like to update it to: $");
+         String numberOfUnits = in.readLine();
+         System.out.print("\tPlease Enter the new price per unit: $");
+         String pricePerUnit = in.readLine();
+         String updateProduct = String.format("UPDATE product set numberofunits = numberofunits + '%s', priceperunit = '%s' WHERE storeid = '%s' and productname = '%s'; ",numberOfUnits,pricePerUnit,storeID,productName);
+         esql.executeUpdate(updateProduct);
+         String productUpdateInsert = String.format("insert into productupdates (updatenumber,managerid,storeid,productname,updatedon) VALUES( DEFAULT, '%s','%s','%s',now()::timestamptz(0));",Retail.getUserID(),storeID,productName);
+         esql.executeUpdate(productUpdateInsert);
+      }
+      catch (Exception e) {
+         System.err.println(e.getMessage());
+      }	
    }
 
    public static void setUser(String name, List<String> id){
