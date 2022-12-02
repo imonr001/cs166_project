@@ -550,7 +550,7 @@ public class Retail {
          System.out.print("\tEnter number of units: $");
          String numberOFUnits = in.readLine();
        
-         String queryUpdateProduct = String.format("UPDATE product set numberofunits = numberofunits + '%s' WHERE storeid = '%s' and productname = '%s' and product.storeid IN (select s.storeID as dist from users u, store s where u.userID = '%s' and s.storeID = '%s' and calculate_distance(u.latitude, u.longitude, s.latitude, s.longitude) <= 30); ",numberOFUnits,storeID,productName,Retail.getUserID(),storeID);
+         String queryUpdateProduct = String.format("UPDATE product set numberofunits = numberofunits - '%s' WHERE storeid = '%s' and productname = '%s' and product.storeid IN (select s.storeID as dist from users u, store s where u.userID = '%s' and s.storeID = '%s' and calculate_distance(u.latitude, u.longitude, s.latitude, s.longitude) <= 30); ",numberOFUnits,storeID,productName,Retail.getUserID(),storeID);
          String queryOrderProduct = String.format("insert into orders(ordernumber,customerid,storeid,productname,unitsordered,ordertime) VALUES (DEFAULT,'%s','%s','%s','%s',now()::timestamptz(0))",Retail.getUserID(),storeID,productName,numberOFUnits);
          String checkIfStoreInRange =String.format("select s.storeID from users u, store s where u.userID = '%s'  and s.storeid = '%s' and calculate_distance(u.latitude, u.longitude, s.latitude, s.longitude) <= 30;",Retail.getUserID(),storeID);
          
