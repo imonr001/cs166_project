@@ -463,7 +463,7 @@ public class Retail {
 		return name;
          return null;
       }catch(Exception e){
-         System.err.println (e.getMessage ());
+         System.err.println ("User does not exist!");
          return null;
       }
    }//end
@@ -485,7 +485,7 @@ public class Retail {
 		return name;
          return null;
       }catch(Exception e){
-         System.err.println (e.getMessage ());
+         System.err.println("User does not exist!");
          return null;
       }
    }//end
@@ -506,7 +506,7 @@ public class Retail {
 		return name;
          return null;
       }catch(Exception e){
-         System.err.println (e.getMessage ());
+         System.err.println ("User does not exist!");
          return null;
       }
    }//end
@@ -549,22 +549,33 @@ public class Retail {
          String productName = in.readLine();
          System.out.print("\tEnter number of units: $");
          String numberOFUnits = in.readLine();
-       
+
+	 String checkIfQuantityValid = String.format("SELECT P.numberOfUnits FROM Product P, Store S WHERE S.storeID = '%s' AND P.productName = '%s' AND P.storeID = '%s'", storeID, productName, storeID);
+
+
          String queryUpdateProduct = String.format("UPDATE product set numberofunits = numberofunits - '%s' WHERE storeid = '%s' and productname = '%s' and product.storeid IN (select s.storeID as dist from users u, store s where u.userID = '%s' and s.storeID = '%s' and calculate_distance(u.latitude, u.longitude, s.latitude, s.longitude) <= 30); ",numberOFUnits,storeID,productName,Retail.getUserID(),storeID);
          String queryOrderProduct = String.format("insert into orders(ordernumber,customerid,storeid,productname,unitsordered,ordertime) VALUES (DEFAULT,'%s','%s','%s','%s',now()::timestamptz(0))",Retail.getUserID(),storeID,productName,numberOFUnits);
          String checkIfStoreInRange =String.format("select s.storeID from users u, store s where u.userID = '%s'  and s.storeid = '%s' and calculate_distance(u.latitude, u.longitude, s.latitude, s.longitude) <= 30;",Retail.getUserID(),storeID);
          
-          esql.executeUpdate(queryUpdateProduct);
           int check = esql.executeQuery(checkIfStoreInRange);
          if(check > 0){
-            esql.executeUpdate(queryOrderProduct);    
-            System.out.print("\nOrder has been placed!\n");
+	    List<List<String>> retrieveQuantity = esql.executeQueryAndReturnResult(checkIfQuantityValid);
+	    int quantity = Integer.parseInt(retrieveQuantity.get(0).get(0));
+
+	    if (quantity < Integer.valueOf(numberOFUnits)) {
+		System.out.println("Not enough inventory to order" + numberOFUnits + " products. The store current has " + quantity + " units available.");
+	    }
+	    else {
+            	esql.executeUpdate(queryOrderProduct);
+		esql.executeUpdate(queryUpdateProduct);
+            	System.out.print("\nOrder has been placed!\n");
+	    }
          }
          else{
             System.out.print("\nThis store is not in range!\n");
          }
       }catch(Exception e){
-         System.err.println (e.getMessage());
+	System.err.println("This store does not contain this product"); 
       }
    }
 
