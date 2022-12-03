@@ -563,7 +563,7 @@ public class Retail {
 	    int quantity = Integer.parseInt(retrieveQuantity.get(0).get(0));
 
 	    if (quantity < Integer.valueOf(numberOFUnits)) {
-		System.out.println("Not enough inventory to order" + numberOFUnits + " products. The store current has " + quantity + " units available.");
+		System.out.println("Not enough inventory to order " + numberOFUnits + " products. The store current has " + quantity + " units available.");
 	    }
 	    else {
             	esql.executeUpdate(queryOrderProduct);
